@@ -1,7 +1,7 @@
 import { getDB } from '../config/database.js';
 import { ObjectId } from 'mongodb';
 
-const COLLECTION = 'products';
+const COLLECTION = 'Products';
 
 export class ProductModel {
     constructor(parameters) {

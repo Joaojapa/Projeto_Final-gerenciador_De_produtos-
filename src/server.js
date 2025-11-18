@@ -1,4 +1,4 @@
-import ('dotenv').config();
+import 'dotenv/config'
 import express from 'express';
 import {connectDB}  from './config/database.js';
 import {productRouter} from './routes/productRoutes.js';
@@ -6,6 +6,10 @@ import {authRouter} from './routes/authRoutes.js';
 import swaggerUi from 'swagger-ui-express';
 import yaml from 'yamljs';
 import path from 'path';
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -14,8 +18,8 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 
 // Rotas
-app.use('/api/auth', authRoutes);
-app.use('/api/products', productRoutes);
+app.use('/api/auth', authRouter);
+app.use('/api/products', productRouter);
 
 // Swagger
 const swaggerDocument = yaml.load(path.join(__dirname, 'docs/swagger.yaml'));

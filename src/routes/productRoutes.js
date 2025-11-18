@@ -1,6 +1,6 @@
 import  express from 'express';
 import  {ProductController} from '../controllers/ProductController.js';
-import  { validateProduct } from '../middleware/validate.js';
+import  { validateProduct } from '../middleware/validateProduct.js';
 import  {AuthMiddleware} from '../middleware/AuthMiddleware.js';
 
 const router = express.Router();
@@ -12,10 +12,10 @@ router.get('/', productController.getAllProducts);
 router.get('/:id', productController.getProductById);
 
 // Rotas protegidas (escrita)
-router.post('/', authenticate, validateProduct, productController.createProduct);
-router.put('/:id', validateProduct, productController.updateProduct);
+router.post('/create', authenticate, validateProduct, productController.createProduct);
+router.put('/update/:id', validateProduct, productController.updateProduct);
 router.patch('/:id', validateProduct, productController.updateProduct);
-router.delete('/:id', productController.deleteProduct);
+router.delete('/delete/:id', productController.deleteProduct);
 // router.post('/', authenticate, validateProduct, productController.createProduct);
 // router.put('/:id', authenticate, validateProduct, productController.updateProduct);
 // router.patch('/:id', authenticate, validateProduct, productController.updateProduct);

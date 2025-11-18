@@ -1,4 +1,5 @@
 import { ProductModel } from '../models/ProductModel.js';
+import { validateProduct } from '../middleware/validateProduct.js';
 
 const productModel = new ProductModel();
 export class ProductController {
