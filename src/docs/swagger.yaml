@@ -3,6 +3,7 @@ info:
   title: Product Manager API
   version: 1.0.0
   description: API RESTful para gerenciamento de produtos com autenticação JWT
+
 servers:
   - url: http://localhost:3000
     description: Servidor local
@@ -13,6 +14,51 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
+
+  schemas:
+    Product:
+      type: object
+      properties:
+        _id:
+          type: string
+          example: "507f1f77bcf86cd799439011"
+        nome:
+          type: string
+          example: "Camiseta Polo"
+        preco:
+          type: number
+          example: 89.9
+        categoria:
+          type: string
+          example: "Roupas"
+        quantidade:
+          type: string
+          example: "1Kg"
+        createdAt:
+          type: date
+          format: date-time
+        updatedAt:
+          type: date
+          format: date-time
+
+    ProductInput:
+      type: object
+      required: [nome, preco, categoria, quantidade]
+      properties:
+        nome:
+          type: string
+          minLength: 2
+          example: "Camiseta Polo"
+        preco:
+          type: number
+          minimum: 0
+          example: 89.9
+        categoria:
+          type: string
+          example: "Roupas"
+        quantidade:
+          type: string
+          example: "1Kg"
 
 paths:
   /api/auth/login:
@@ -25,18 +71,50 @@ paths:
             schema:
               type: object
               properties:
-                email: { type: string, example: "admin@exemplo.com" }
-                password: { type: string, example: "123456" }
+                email:
+                  type: string
+                  format: email
+                  example: "admin@exemplo.com"
+                password:
+                  type: string
+                  format: password
+                  example: "123456"
       responses:
         '200':
-          description: Token gerado
+          description: Login bem-sucedido
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  token: { type: string }
-                  user: { type: object }
+                  token:
+                    type: string
+                  user:
+                    type: object
+
+  /api/auth/register:
+    post:
+      summary: Cadastro de usuário
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  minLength: 6
+                role:
+                  type: string
+                  enum: [admin, common]
+                  default: common
+      responses:
+        '201':
+          description: Usuário criado com sucesso
 
   /api/products:
     get:
@@ -50,6 +128,7 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Product'
+
     post:
       summary: Criar novo produto
       security:
@@ -62,76 +141,83 @@ paths:
               $ref: '#/components/schemas/ProductInput'
       responses:
         '201':
-          description: Produto criado
+          description: Produto criado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
 
   /api/products/{id}:
     get:
       summary: Buscar produto por ID
       parameters:
         - in: path
-          name: id
+          nome: id
           required: true
-          schema: { type: string }
+          schema:
+            type: string
       responses:
         '200':
           description: Produto encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
         '404':
-          description: Não encontrado
+          description: Produto não encontrado
+
     put:
-      summary: Atualizar produto (completo)
+      summary: Atualizar produto (substituição completa)
       security:
         - bearerAuth: []
       parameters:
         - in: path
-          name: id
+          nome: id
           required: true
+          schema:
+            type: string
       requestBody:
-        $ref: '#/components/schemas/ProductInput'
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductInput'
       responses:
         '200':
-          description: Atualizado
+          description: Produto atualizado
+
     patch:
       summary: Atualizar produto (parcial)
       security:
         - bearerAuth: []
       parameters:
         - in: path
-          name: id
+          nome: id
           required: true
+          schema:
+            type: string
       requestBody:
-        $ref: '#/components/schemas/ProductInput'
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductInput'
       responses:
         '200':
-          description: Atualizado
+          description: Produto atualizado
+
     delete:
       summary: Deletar produto
       security:
         - bearerAuth: []
       parameters:
         - in: path
-          name: id
+          nome: id
           required: true
+          schema:
+            type:34 string
       responses:
         '200':
-          description: Deletado
-
-components:
-  schemas:
-    Product:
-      type: object
-      properties:
-        _id: { type: string }
-        name: { type: string }
-        price: { type: number }
-        category: { type: string }
-        stock: { type: integer }
-        createdAt: { type: string }
-        updatedAt: { type: string }
-    ProductInput:
-      type: object
-      required: [name, price, category]
-      properties:
-        name: { type: string, minLength: 2 }
-        price: { type: number, minimum: 0 }
-        category: { type: string }
-        stock: { type: integer, minimum: 0 }
+          description: Produto deletado com sucesso
+        '204':
+          description: Deletado (sem conteúdo)

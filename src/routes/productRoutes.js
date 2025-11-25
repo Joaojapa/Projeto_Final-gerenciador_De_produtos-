@@ -5,6 +5,7 @@ import  {AuthMiddleware} from '../middleware/AuthMiddleware.js';
 
 const router = express.Router();
 const authenticate = new AuthMiddleware().verifyToken
+const authorize = new AuthMiddleware().authorize
 const productController = new ProductController();
 
 // Rotas públicas
@@ -12,9 +13,9 @@ router.get('/', productController.getAllProducts);
 router.get('/:id', productController.getProductById);
 
 // Rotas protegidas (escrita)
-router.post('/create', authenticate, validateProduct, productController.createProduct);
-router.put('/update/:id', validateProduct, productController.updateProduct);
-router.patch('/:id', validateProduct, productController.updateProduct);
+router.post('/create', authenticate, authorize('admin'), validateProduct, productController.createProduct);
+router.put('/update/:id',authenticate, authorize('admin'), validateProduct, productController.updateProduct);
+router.patch('/:id', authenticate, authorize('admin'), validateProduct, productController.updateProduct);
 router.delete('/delete/:id', productController.deleteProduct);
 // router.post('/', authenticate, validateProduct, productController.createProduct);
 // router.put('/:id', authenticate, validateProduct, productController.updateProduct);
