@@ -1,25 +1,52 @@
-import  express from 'express';
-import  {ProductController} from '../controllers/ProductController.js';
-import  { validateProduct } from '../middleware/validateProduct.js';
-import  {AuthMiddleware} from '../middleware/AuthMiddleware.js';
+import express from 'express';
+import { ProductController } from '../controllers/ProductController.js';
+import { validateProduct } from '../middleware/validateProduct.js';
+import { validateProductUpdate } from '../middleware/validateProductUpdate.js';
+import { AuthMiddleware } from '../middleware/AuthMiddleware.js';
 
 const router = express.Router();
 const authenticate = new AuthMiddleware().verifyToken
 const authorize = new AuthMiddleware().authorize
 const productController = new ProductController();
 
-// Rotas públicas
-router.get('/', productController.getAllProducts);
-router.get('/:id', productController.getProductById);
+// ================================
+// ROTAS PÚBLICAS (leitura)
+// ================================
+router.get('/', productController.getAllProducts);           // GET    /api/products
+router.get('/:id', productController.getProductById);       // GET    /api/products/6925d041...
 
-// Rotas protegidas (escrita)
-router.post('/create', authenticate, authorize('admin'), validateProduct, productController.createProduct);
-router.put('/update/:id',authenticate, authorize('admin'), validateProduct, productController.updateProduct);
-router.patch('/:id', authenticate, authorize('admin'), validateProduct, productController.updateProduct);
-router.delete('/delete/:id', productController.deleteProduct);
-// router.post('/', authenticate, validateProduct, productController.createProduct);
-// router.put('/:id', authenticate, validateProduct, productController.updateProduct);
-// router.patch('/:id', authenticate, validateProduct, productController.updateProduct);
-// router.delete('/:id', authenticate, productController.deleteProduct);
+// ================================
+// ROTAS PROTEGIDAS - APENAS ADMIN
+// ================================
+router.post(
+    '/',
+   authenticate,
+    authorize('admin'),
+    validateProduct,
+    productController.createProduct
+); // POST   /api/products
 
-export {router as productRouter};
+router.put(
+    '/:id',
+    authenticate,
+    authorize('admin'),
+    validateProductUpdate,
+    productController.updateProduct
+); // PUT    /api/products/6925d041... (substituição completa)
+
+router.patch(
+    '/:id',
+    authenticate,
+    authorize('admin'),
+    validateProductUpdate,
+    productController.updateProduct
+); // PATCH  /api/products/6925d041... (atualização parcial)
+
+router.delete(
+    '/:id',
+    authenticate,
+    authorize('admin'),
+    productController.deleteProduct
+); // DELETE /api/products/6925d041...
+
+export { router as productRouter };

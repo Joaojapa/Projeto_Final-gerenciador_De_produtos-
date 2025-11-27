@@ -16,6 +16,37 @@ components:
       bearerFormat: JWT
 
   schemas:
+    # ==================== SCHEMAS DE ERRO E RESPOSTA PADRÃO ====================
+    Error:
+      type: object
+      required:
+        - success
+        - message
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+          example: Não autorizado
+        error:
+          type: string
+          example: Unauthorized
+        statusCode:
+          type: integer
+          example: 401
+
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: Operação realizada com sucesso
+
+    # ==================== SCHEMAS DE PRODUTO ====================
     Product:
       type: object
       properties:
@@ -33,12 +64,12 @@ components:
           example: "Roupas"
         quantidade:
           type: string
-          example: "1Kg"
+          example: "50 un"
         createdAt:
-          type: date
+          type: string
           format: date-time
         updatedAt:
-          type: date
+          type: string
           format: date-time
 
     ProductInput:
@@ -58,18 +89,21 @@ components:
           example: "Roupas"
         quantidade:
           type: string
-          example: "1Kg"
+          example: "50 un"
 
 paths:
+  # ====================== AUTENTICAÇÃO ======================
   /api/auth/login:
     post:
       summary: Login de usuário
+      tags: [AuthUser]
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
+              required: [email, password]
               properties:
                 email:
                   type: string
@@ -95,18 +129,22 @@ paths:
   /api/auth/register:
     post:
       summary: Cadastro de usuário
+      tags: [AuthUser]
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
+              required: [email, password]
               properties:
                 email:
                   type: string
                   format: email
+                  example: "user@exemplo.com"
                 password:
                   type: string
+                  format: password
                   minLength: 6
                 role:
                   type: string
@@ -115,13 +153,88 @@ paths:
       responses:
         '201':
           description: Usuário criado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
 
+  /api/auth/users:
+    get:
+      summary: Listar todos os usuários
+      description: Apenas administradores podem acessar esta rota
+      tags: [Autenticação]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Lista de usuários retornada com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Usuários listados com sucesso"
+                  total:
+                    type: integer
+                    example: 2
+                  users:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        _id:
+                          type: string
+                        email:
+                          type: string
+                          format: email
+                        role:
+                          type: string
+                          enum: [admin, common]
+                        createdAt:
+                          type: string
+                          format: date-time
+                        updatedAt:
+                          type: string
+                          format: date-time
+              examples:
+                sucesso:
+                  value:
+                    message: "Usuários listados com sucesso"
+                    total: 2
+                    users:
+                      - _id: "507f1f77bcf86cd799439011"
+                        email: "admin@exemplo.com"
+                        role: "admin"
+                        createdAt: "2025-04-01T10:00:00Z"
+                        updatedAt: "2025-04-01T10:00:00Z"
+                      - _id: "507f1f77bcf86cd799439012"
+                        email: "user@teste.com"
+                        role: "common"
+                        createdAt: "2025-04-02T15:30:00Z"
+                        updatedAt: "2025-04-02T15:30:00Z"
+        '401':
+          description: Não autorizado (token inválido ou ausente)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Acesso proibido (usuário não é admin)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # ====================== PRODUTOS ======================
   /api/products:
     get:
       summary: Listar todos os produtos
+      tags: [Produtos]
       responses:
         '200':
-          description: Lista de produtos
+          description: Lista de produtos retornada com sucesso
           content:
             application/json:
               schema:
@@ -131,6 +244,7 @@ paths:
 
     post:
       summary: Criar novo produto
+      tags: [Produtos]
       security:
         - bearerAuth: []
       requestBody:
@@ -139,6 +253,11 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/ProductInput'
+            example:
+              nome: "Camiseta Polo"
+              preco: 89.90
+              categoria: "Roupas"
+              quantidade: 50
       responses:
         '201':
           description: Produto criado com sucesso
@@ -150,12 +269,14 @@ paths:
   /api/products/{id}:
     get:
       summary: Buscar produto por ID
+      tags: [Produtos]
       parameters:
         - in: path
-          nome: id
+          name: id
           required: true
           schema:
             type: string
+          example: "6925d0413b1446eafe776ae0"
       responses:
         '200':
           description: Produto encontrado
@@ -165,14 +286,19 @@ paths:
                 $ref: '#/components/schemas/Product'
         '404':
           description: Produto não encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
     put:
-      summary: Atualizar produto (substituição completa)
+      summary: Atualizar produto completamente
+      tags: [Produtos]
       security:
         - bearerAuth: []
       parameters:
         - in: path
-          nome: id
+          name: id
           required: true
           schema:
             type: string
@@ -185,14 +311,19 @@ paths:
       responses:
         '200':
           description: Produto atualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
 
     patch:
-      summary: Atualizar produto (parcial)
+      summary: Atualizar produto parcialmente
+      tags: [Produtos]
       security:
         - bearerAuth: []
       parameters:
         - in: path
-          nome: id
+          name: id
           required: true
           schema:
             type: string
@@ -201,23 +332,48 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ProductInput'
+              type: object
+              minProperties: 1
+              properties:
+                nome:
+                  type: string
+                preco:
+                  type: number
+                  minimum: 0
+                categoria:
+                  type: string
+                quantidade:
+                  type: string
+            examples:
+              apenasPreco:
+                value: { "preco": 59.90 }
+              apenasNome:
+                value: { "nome": "Camiseta Premium" }
       responses:
         '200':
-          description: Produto atualizado
+          description: Produto atualizado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
 
     delete:
       summary: Deletar produto
+      tags: [Produtos]
       security:
         - bearerAuth: []
       parameters:
         - in: path
-          nome: id
+          name: id
           required: true
           schema:
-            type:34 string
+            type: string
       responses:
-        '200':
-          description: Produto deletado com sucesso
         '204':
-          description: Deletado (sem conteúdo)
+          description: Produto deletado com sucesso
+        '404':
+          description: Produto não encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'

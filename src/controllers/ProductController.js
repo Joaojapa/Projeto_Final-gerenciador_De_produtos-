@@ -1,5 +1,4 @@
 import { ProductModel } from '../models/ProductModel.js';
-import { validateProduct } from '../middleware/validateProduct.js';
 
 const productModel = new ProductModel();
 export class ProductController {
@@ -40,13 +39,22 @@ export class ProductController {
 
     updateProduct = async (req, res) => {
         try {
-            const updated = await productModel.update(req.params.id, req.validatedProduct);
-            if (!updated) {
-                return res.status(404).json({ error: 'Produto não encontrado' });
+            const dataToUpdate = req.validatedProductUpdate
+
+            const wasUpdated = await productModel.update(req.params.id, dataToUpdate);
+
+            if (!wasUpdated) {
+                return res.status(404).json({
+                    error: 'Produto não encontrado ou nenhum campo foi alterado'
+                });
             }
-            res.status(200).json({ message: 'Produto atualizado com sucesso' });
+
+            res.status(200).json({
+                message: 'Produto atualizado com sucesso'
+            });
         } catch (err) {
-            res.status(500).json({ error: 'Erro ao atualizar produto' });
+            console.error('Erro ao atualizar produto:', err);
+            res.status(500).json({ error: 'Erro interno do servidor' });
         }
     };
 

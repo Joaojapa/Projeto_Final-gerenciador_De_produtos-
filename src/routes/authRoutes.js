@@ -1,23 +1,15 @@
 import express  from 'express';
-import { generateToken } from '../utils/jwt.js';
+import { AuthController } from '../controllers/AuthController.js';
+import { validateUserLogin } from '../middleware/validateUserLogin.js';
+import {validateUserRegister} from '../middleware/validateUserRegister.js'
 
 const router = express.Router();
 
-// Simulação de usuário (em produção: banco de dados)
-const USERS = [
-  { id: 1, email: 'admin@exemplo.com', password: '123456' }
-];
+const authController = new AuthController()
 
-router.post('/login', (req, res) => {
-  const { email, password } = req.body;
+router.post('/login', validateUserLogin, authController.loginUser);
 
-  const user = USERS.find(u => u.email === email && u.password === password);
-  if (!user) {
-    return res.status(401).json({ error: 'Credenciais inválidas' });
-  }
-
-  const token = generateToken({ id: user.id, email: user.email });
-  res.json({ token, user: { id: user.id, email: user.email } });
-});
+router.post('/register', validateUserRegister, authController.createUser);
+router.get('/users', authController.getAllUsers)
 
 export { router as authRouter };

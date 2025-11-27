@@ -30,15 +30,29 @@ export class ProductModel {
         return await db.collection(COLLECTION).findOne({ _id: new ObjectId(id) });
     };
 
-    update = async (id, updateData) => {
-        if (!ObjectId.isValid(id)) return null;
+   update = async (id, updateData) => {
+    if (!ObjectId.isValid(id)) return false;
+
+    try {
         const db = getDB();
         const result = await db.collection(COLLECTION).updateOne(
             { _id: new ObjectId(id) },
-            { $set: { ...updateData, updatedAt: new Date() } }
+            {
+                $set: {
+                    ...updateData,
+                    updatedAt: new Date()   // 2. continua atualizando updatedAt
+                }
+            }
         );
+
+        // 3. retorna true só se realmente modificou algo
         return result.modifiedCount > 0;
-    };
+
+    } catch (error) {
+        console.error('Erro no productModel.update:', error);
+        throw error;
+    }
+};
 
     remove = async (id) => {
         if (!ObjectId.isValid(id)) return false;
